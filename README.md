@@ -17,8 +17,7 @@
 ------------------------
 
 Ce projet permet de mettre en avant la programmation avancée en développement mobile.
-Notre projet est de développer une application qui permet de prévoir les temps et circulation d'un trajet entre son domicile et son lieu de travail.
-Nous voulons également ajouté la détection de magasins sur le trajet à l'instant où le smartphone est à proximité.
+Notre projet est de développer une application qui permet la détection de magasins sur notre trajet à proximité de notre position, et nous affiche les magasins qui nous interesse.
 
 Ce projet sera sous la plateforme Android exclusivement (avec l'IDE Android Studio) et sera testé sur nos smartphones personnels (utilisation de la position GPS).
 
