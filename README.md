@@ -23,3 +23,4 @@ Nous voulons également ajouté la détection de magasins sur le trajet à l'ins
 Ce projet sera sous la plateforme Android exclusivement (avec l'IDE Android Studio) et sera testé sur nos smartphones personnels (utilisation de la position GPS).
 
 Le projet se réalise sous forme de sprint (voir le fichier Gantt).
+A noter que le Gantt prévionnel n'est donné qu'à titre indicatif et ne présente que les directives à suivre pour l'accomplissement du projet.
