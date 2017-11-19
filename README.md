@@ -3,11 +3,13 @@
 
 ##Encadrant : 
 ------------
+
 	* Jean-Yves TIGLI : Jean-Yves.TIGLI@unice.fr
-	
+
 ##Étudiants : 
+-------------
+
 	* Nicolas PÉPIN : nicolas.pepin.06@gmail.com
-	
 	* Adrien PRESTINI : adrien.prestini@etu.unice.fr
 	
 	
