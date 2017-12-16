@@ -20,6 +20,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".PreferencesActivity"></activity>
+        <service android:name="com.pepin_prestini.elim.elim.Services.GPSService"></service>
     </application>
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.location.gps" />
 
 </manifest>

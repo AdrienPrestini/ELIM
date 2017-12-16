@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="En direct">
+
+        <CheckBoxPreference android:title="Notifications"
+        android:defaultValue="true"
+        android:summary="Cette option permet de recevoir des notifications lors de la proximité du téléphone à un magasin que vous aimez"
+        android:key="notificationStores" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Liste de commerces">
+        <MultiSelectListPreference android:title="Magasins recherchés"
+            android:summary="Selectionner ici les types de magasin que vous voulez suivre"
+            android:key="StoreTypes"
+            android:entries="@array/listArray"
+            android:entryValues="@array/listValues"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
