@@ -3,6 +3,10 @@ package com.pepin_prestini.elim.elim;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,6 +21,7 @@ import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -37,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
     private IntentFilter intentFilter;
     FloatingActionButton fab;
     private boolean GPSEnable = false;
+
+
+    public static final int ID_NOTIFICATION = 1988;
+
+
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -112,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
     private void requestLocationPermission() {
         // Permission has not been granted and must be requested.
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Manifest.permission.ACCESS_FINE_LOCATION) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.VIBRATE)) {
             // Provide an additional rationale to the user if the permission was not granted
             // and the user would benefit from additional context for the use of the permission.
             // Display a SnackBar with a button to request the missing permission.
@@ -122,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     // Request the permission
                     ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.VIBRATE},
                             MY_PERMISSIONS_REQUEST_GPS);
                 }
             }).show();
@@ -132,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                     "Permission non disponible. Demande de permission pour le GPS",
                     Snackbar.LENGTH_SHORT).show();
             // Request the permission. The result will be received in onRequestPermissionResult().
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.VIBRATE},
                     MY_PERMISSIONS_REQUEST_GPS);
         }
     }
@@ -142,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         // BEGIN_INCLUDE(onRequestPermissionsResult)
         if (requestCode == MY_PERMISSIONS_REQUEST_GPS) {
             // Request for camera permission.
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if ((grantResults[0] == PackageManager.PERMISSION_GRANTED) && ( grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
                 // Permission has been granted. GPS camera preview Activity.
                 /*Snackbar.make(findViewById(R.id.main_layout), "GPS autorisé. Démarrage du GPS.",
                         Snackbar.LENGTH_SHORT)
@@ -160,6 +171,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void startGPS() {
         verifyGPS();
+        //création d'une notif
+        createNotification();
+
         if(GPSEnable) {
             if (!serviceIsStarted) {
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color
@@ -181,6 +195,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    private void createNotification() {
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.common_ic_googleplayservices)
+                        .setContentTitle("Un magasin juste tout proche")
+                        .setContentText("Venez vite voire l'appli ELIM");
+
+        Intent notificationIntent = new Intent(this, this.getClass());
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        builder.setVibrate(new long[] {0,200,100,200,100,200});
+        manager.notify(0, builder.build());
     }
 
     private void startGPSPreview() {
