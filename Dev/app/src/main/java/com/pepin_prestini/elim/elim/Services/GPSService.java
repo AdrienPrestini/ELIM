@@ -40,6 +40,7 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
 
     public static final String LAT = "latitude";
     public static final String LONG = "longitude";
+    public static final String ALT = "altitude";
     private IntentFilter intentFilter;
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -57,6 +58,7 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
 
             intent.putExtra(GPSService.LAT, 0.0);
             intent.putExtra(GPSService.LONG, 0.0);
+            intent.putExtra(GPSService.ALT, 0.0);
             sendBroadcast(intent);
         }
     }
@@ -98,8 +100,12 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
         }
         Location l = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (l != null) {
-            Log.i(LOGSERVICE, "lat " + l.getLatitude());
-            Log.i(LOGSERVICE, "lng " + l.getLongitude());
+            Double alt = l.getAltitude();
+            Double lon = l.getLongitude();
+            Double lat = l.getLatitude();
+            Log.i(LOGSERVICE, "lat " + lat);
+            Log.i(LOGSERVICE, "lng " + lon);
+            Log.i(LOGSERVICE, "alt " + alt);
 
         }
 
@@ -114,14 +120,20 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.i(LOGSERVICE, "lat " + location.getLatitude());
-        Log.i(LOGSERVICE, "lng " + location.getLongitude());
-        LatLng mLocation = (new LatLng(location.getLatitude(), location.getLongitude()));
+        Double alt = location.getAltitude();
+        Double lon = location.getLongitude();
+        Double lat = location.getLatitude();
+        Log.i(LOGSERVICE, "lat " + lat);
+        Log.i(LOGSERVICE, "lng " + lon);
+        Log.i(LOGSERVICE, "alt " + alt);
+        LatLng mLocation = (new LatLng(lat, lon));
+
         Intent intent = new Intent();
         intent.setAction(SERVICE_TO_ACTIVITY);
 
-        intent.putExtra(GPSService.LAT, location.getLatitude());
-        intent.putExtra(GPSService.LONG, location.getLongitude());
+        intent.putExtra(GPSService.LAT, lat);
+        intent.putExtra(GPSService.LONG, lon);
+        intent.putExtra(GPSService.ALT, alt);
         sendBroadcast(intent);
     }
 

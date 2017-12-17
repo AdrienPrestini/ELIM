@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     TextView mLatitudeTextView ;
     TextView mLongitudeTextView ;
+    TextView mAltitudeTextView ;
     //private boolean serviceIsStarted = false;
     private IntentFilter intentFilter;
     FloatingActionButton fab;
@@ -54,8 +55,10 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             Double lat = intent.getDoubleExtra(GPSService.LAT,0);
             Double lon = intent.getDoubleExtra(GPSService.LONG,0);
+            Double alt = intent.getDoubleExtra(GPSService.ALT,0);
             mLatitudeTextView.setText(lat.toString());
             mLongitudeTextView.setText(lon.toString());
+            mAltitudeTextView.setText(alt.toString());
         }
     };
 
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         mLatitudeTextView =  findViewById((R.id.latitude_textview));
         mLongitudeTextView = findViewById((R.id.longitude_textview));
+        mAltitudeTextView = findViewById((R.id.altitude_textview));
         fab = findViewById(R.id.fab);
 
         fab.setOnClickListener(new View.OnClickListener() {
