@@ -50,8 +50,15 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
     };
 
     private void ciao() {
-        if(mGoogleApiClient.isConnected())
+        if(mGoogleApiClient.isConnected()){
             mGoogleApiClient.disconnect();
+            Intent intent = new Intent();
+            intent.setAction(SERVICE_TO_ACTIVITY);
+
+            intent.putExtra(GPSService.LAT, 0.0);
+            intent.putExtra(GPSService.LONG, 0.0);
+            sendBroadcast(intent);
+        }
     }
 
     @Override
@@ -122,7 +129,7 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
     public void onDestroy() {
         super.onDestroy();
         Log.i(LOGSERVICE, "onDestroy - on détruit tout");
-        //mGoogleApiClient.disconnect();
+        mGoogleApiClient.disconnect();
     }
 
 

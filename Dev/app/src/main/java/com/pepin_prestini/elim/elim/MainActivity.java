@@ -1,6 +1,7 @@
 package com.pepin_prestini.elim.elim;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     TextView mLatitudeTextView ;
     TextView mLongitudeTextView ;
-    private boolean serviceIsStarted = false;
+    //private boolean serviceIsStarted = false;
     private IntentFilter intentFilter;
     FloatingActionButton fab;
     private boolean GPSEnable = false;
@@ -74,13 +75,12 @@ public class MainActivity extends AppCompatActivity {
         }
         setTheme(R.style.AppTheme_NoActionBar);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mLatitudeTextView =  findViewById((R.id.latitude_textview));
         mLongitudeTextView = findViewById((R.id.longitude_textview));
         fab = findViewById(R.id.fab);
-        fab.setBackgroundTintList(ColorStateList.valueOf(Color
-                .parseColor("#C50D0C")));
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -94,6 +94,25 @@ public class MainActivity extends AppCompatActivity {
         intentFilter = new IntentFilter();
         intentFilter.addAction(GPSService.SERVICE_TO_ACTIVITY);
         registerReceiver(receiver, intentFilter);
+        refreshViewReopen();
+        /*Intent intent = new Intent();
+        intent.setAction(GPSService.ACTIVITY_TO_SERVICE);
+
+        intent.putExtra(GPSService.STOP, 0);
+        sendBroadcast(intent);*/
+    }
+
+    private void refreshViewReopen() {
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        GPSEnable = manager.isProviderEnabled( LocationManager.GPS_PROVIDER );
+        if(GPSEnable) {
+            if (isMyServiceRunning(GPSService.class)) {
+                fab.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#40900e")));
+            }
+            else{
+                fab.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#C50D0C")));
+            }
+        }
     }
 
     @Override
@@ -172,10 +191,10 @@ public class MainActivity extends AppCompatActivity {
     private void startGPS() {
         verifyGPS();
         //création d'une notif
-        createNotification();
+        //createNotification();
 
         if(GPSEnable) {
-            if (!serviceIsStarted) {
+            if (!isMyServiceRunning(GPSService.class)) {
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color
                         .parseColor("#40900e")));
                 startService(new Intent(this, GPSService.class));
@@ -189,9 +208,9 @@ public class MainActivity extends AppCompatActivity {
 
                 intent.putExtra(GPSService.STOP, 0);
                 sendBroadcast(intent);
-                //stopService(new Intent(this, GPSService.class));
+                stopService(new Intent(this, GPSService.class));
+
             }
-            serviceIsStarted = !serviceIsStarted;
         }
 
 
@@ -245,6 +264,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
+
     }
     @Override
     protected void onStart() {
@@ -273,5 +294,14 @@ public class MainActivity extends AppCompatActivity {
             alertDialog.show();
         }
 
+    }
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
