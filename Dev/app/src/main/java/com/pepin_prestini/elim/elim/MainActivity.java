@@ -191,15 +191,20 @@ public class MainActivity extends AppCompatActivity {
     private void startGPS() {
         verifyGPS();
         //création d'une notif
-        //createNotification();
+
 
         if(GPSEnable) {
             if (!isMyServiceRunning(GPSService.class)) {
+                createNotification();
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color
                         .parseColor("#40900e")));
                 startService(new Intent(this, GPSService.class));
                 Toast.makeText(this.getApplicationContext(), "ON COMMENCE LE SERVICE", Toast.LENGTH_LONG).show();
             } else {
+                NotificationManager notifManager= (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                if (notifManager != null) {
+                    notifManager.cancelAll();
+                }
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color
                         .parseColor("#C50D0C")));
                 Toast.makeText(this.getApplicationContext(), "ON ARRETE LE SERVICE", Toast.LENGTH_LONG).show();
@@ -221,7 +226,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.common_ic_googleplayservices)
                         .setContentTitle("Un magasin juste tout proche")
-                        .setContentText("Venez vite voire l'appli ELIM");
+                        .setContentText("Venez vite voire l'appli ELIM")
+                .setOngoing(true);
 
         Intent notificationIntent = new Intent(this, this.getClass());
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
