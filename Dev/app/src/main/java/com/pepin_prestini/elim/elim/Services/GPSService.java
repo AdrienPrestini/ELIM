@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -20,12 +21,24 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+/*import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;*/
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 /**
  * Created by Adrien on 16/12/2017.
  */
@@ -72,6 +85,7 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
         intentFilter = new IntentFilter();
         intentFilter.addAction(GPSService.ACTIVITY_TO_SERVICE);
         registerReceiver(receiver, intentFilter);
+
     }
 
     @Override
@@ -128,6 +142,9 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
         Log.i(LOGSERVICE, "alt " + alt);
         LatLng mLocation = (new LatLng(lat, lon));
 
+
+        sendData(lon, lat, alt);
+
         Intent intent = new Intent();
         intent.setAction(SERVICE_TO_ACTIVITY);
 
@@ -135,6 +152,25 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
         intent.putExtra(GPSService.LONG, lon);
         intent.putExtra(GPSService.ALT, alt);
         sendBroadcast(intent);
+    }
+
+    private void sendData(Double lon, Double lat, Double alt) {
+
+        String url = "http://172.20.10.4:3000";
+        JSONObject rootJSON = new JSONObject();
+        try {
+            rootJSON.put("longitude", lon);
+            rootJSON.put("latitude", lat);
+            rootJSON.put("altitude", alt);
+            RequestQueue queue = Volley.newRequestQueue(this);
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, rootJSON, null, null);
+            queue.add(jsonObjectRequest);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     @Override
@@ -196,3 +232,32 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
 
 
 }
+
+/*class SendMessage extends AsyncTask<String, Void, Void> {
+    private Exception exception;
+    private Socket socket;
+    private PrintWriter outToServer;
+
+    @Override
+    protected Void doInBackground(String... strings) {
+        try{
+            try{
+                socket = new Socket("172.20.10.4",3000);
+                outToServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+                outToServer.print("toto");
+                outToServer.flush();
+                outToServer.close();
+                socket.close();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }catch (Exception e){
+            this.exception = e;
+            return null;
+        }
+        return null;
+    }
+}*/

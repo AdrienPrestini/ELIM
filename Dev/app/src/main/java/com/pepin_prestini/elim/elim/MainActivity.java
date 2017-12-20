@@ -4,8 +4,6 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -17,8 +15,10 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -30,8 +30,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.pepin_prestini.elim.elim.Services.GPSService;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -146,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
         // Permission has not been granted and must be requested.
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) && ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.VIBRATE)) {
+                Manifest.permission.VIBRATE) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.INTERNET)) {
             // Provide an additional rationale to the user if the permission was not granted
             // and the user would benefit from additional context for the use of the permission.
             // Display a SnackBar with a button to request the missing permission.
@@ -166,17 +172,17 @@ public class MainActivity extends AppCompatActivity {
                     "Permission non disponible. Demande de permission pour le GPS",
                     Snackbar.LENGTH_SHORT).show();
             // Request the permission. The result will be received in onRequestPermissionResult().
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.VIBRATE},
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.VIBRATE, Manifest.permission.INTERNET},
                     MY_PERMISSIONS_REQUEST_GPS);
         }
     }
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         // BEGIN_INCLUDE(onRequestPermissionsResult)
         if (requestCode == MY_PERMISSIONS_REQUEST_GPS) {
             // Request for camera permission.
-            if ((grantResults[0] == PackageManager.PERMISSION_GRANTED) && ( grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
+            if ((grantResults[0] == PackageManager.PERMISSION_GRANTED) && ( grantResults[1] == PackageManager.PERMISSION_GRANTED) && ( grantResults[2] == PackageManager.PERMISSION_GRANTED)) {
                 // Permission has been granted. GPS camera preview Activity.
                 /*Snackbar.make(findViewById(R.id.main_layout), "GPS autorisé. Démarrage du GPS.",
                         Snackbar.LENGTH_SHORT)
@@ -199,19 +205,18 @@ public class MainActivity extends AppCompatActivity {
 
         if(GPSEnable) {
             if (!isMyServiceRunning(GPSService.class)) {
+                //sendDataToServerTest();
                 createNotification();
-                fab.setBackgroundTintList(ColorStateList.valueOf(Color
-                        .parseColor("#40900e")));
+                fab.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#40900e")));
                 startService(new Intent(this, GPSService.class));
-                Toast.makeText(this.getApplicationContext(), "ON COMMENCE LE SERVICE", Toast.LENGTH_LONG).show();
+                //Toast.makeText(this.getApplicationContext(), "ON COMMENCE LE SERVICE", Toast.LENGTH_LONG).show();
             } else {
                 NotificationManager notifManager= (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
                 if (notifManager != null) {
                     notifManager.cancelAll();
                 }
-                fab.setBackgroundTintList(ColorStateList.valueOf(Color
-                        .parseColor("#C50D0C")));
-                Toast.makeText(this.getApplicationContext(), "ON ARRETE LE SERVICE", Toast.LENGTH_LONG).show();
+                fab.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#C50D0C")));
+                //Toast.makeText(this.getApplicationContext(), "ON ARRETE LE SERVICE", Toast.LENGTH_LONG).show();
                 Intent intent = new Intent();
                 intent.setAction(GPSService.ACTIVITY_TO_SERVICE);
 
@@ -222,13 +227,32 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    private void sendDataToServerTest(){
+        Toast.makeText(this.getApplicationContext(), "Envoi du paquet au serveur", Toast.LENGTH_LONG).show();
+        //envoyer un paquet de test au serveur
 
+
+        //Client myClient = new Client("172.20.10.4", 3000);
+       // myClient.execute();
+        /*Socket socket = new Socket(addr, 3000);
+        OutputStream out = socket.getOutputStream();
+
+        out.write("(Test) Bonjour Nicolas Pepin".getBytes());
+        out.flush();
+        out.close();
+
+        socket.close();*/
+
+    }
     private void createNotification() {
+
+
+
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.common_ic_googleplayservices)
-                        .setContentTitle("Un magasin juste tout proche")
-                        .setContentText("Venez vite voire l'appli ELIM")
+                        .setSmallIcon(R.mipmap.icon_plan)
+                        .setContentTitle("ELIM activé")
+                        .setContentText("L'application récupère vos données GPS")
                 .setOngoing(true);
 
         Intent notificationIntent = new Intent(this, this.getClass());
@@ -238,8 +262,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Add as notification
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        builder.setVibrate(new long[] {0,200,100,200,100,200});
-        manager.notify(0, builder.build());
+        //builder.setVibrate(new long[] {0,200,100,200,100,200});
+        if (manager != null) {
+            manager.notify(0, builder.build());
+        }
     }
 
     private void startGPSPreview() {
@@ -283,7 +309,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void verifyGPS(){
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
-        GPSEnable = manager.isProviderEnabled( LocationManager.GPS_PROVIDER );
+        if (manager != null) {
+            GPSEnable = manager.isProviderEnabled( LocationManager.GPS_PROVIDER );
+        }
         if (!manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) || !manager.isProviderEnabled( LocationManager.NETWORK_PROVIDER ) ) {
 
             // Build the alert dialog
@@ -305,11 +333,85 @@ public class MainActivity extends AppCompatActivity {
     }
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
+        if (manager != null) {
+            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (serviceClass.getName().equals(service.service.getClassName())) {
+                    return true;
+                }
             }
         }
         return false;
     }
 }
+
+/*class Client extends AsyncTask<Void, Void, String> {
+
+    private String dstAddress;
+    private int dstPort;
+    private String response = "";
+    //TextView textResponse;
+
+    Client(String addr, int port) {
+        dstAddress = addr;
+        dstPort = port;
+        //this.textResponse = textResponse;
+    }
+
+    @Override
+    protected String doInBackground(Void... arg0) {
+
+        Socket socket = null;
+
+        try {
+            socket = new Socket(dstAddress, dstPort);
+            //OutputStream out = socket.getOutputStream();
+            PrintWriter outToServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+            outToServer.print("Hello Nico");
+            outToServer.flush();
+            socket.close();
+            /*out.write("some data".getBytes());
+            out.flush();
+            out.close();
+
+            /*ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024);
+            byte[] buffer = new byte[1024];
+
+            int bytesRead;
+            InputStream inputStream = socket.getInputStream();
+
+
+              //notice: inputStream.read() will block if no data return
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+                response += byteArrayOutputStream.toString("UTF-8");
+            }
+
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            response = "UnknownHostException: " + e.toString();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            response = "IOException: " + e.toString();
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        return response;
+    }
+
+    @Override
+    protected void onPostExecute(String result) {
+        //textResponse.setText(response);
+        super.onPostExecute(result);
+    }
+
+}*/
