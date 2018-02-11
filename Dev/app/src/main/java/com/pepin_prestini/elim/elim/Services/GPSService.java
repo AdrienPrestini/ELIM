@@ -5,12 +5,14 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.IntentService;
 import android.app.Service;
+import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -39,9 +41,14 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.pepin_prestini.elim.elim.Utils.AppDatabase;
+import com.pepin_prestini.elim.elim.Utils.PositionGPS;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
+
 /**
  * Created by Adrien on 16/12/2017.
  */
@@ -58,7 +65,8 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
     public static final String LONG = "longitude";
     public static final String ALT = "altitude";
     private IntentFilter intentFilter;
-
+    AppDatabase db = Room.databaseBuilder(this,
+            AppDatabase.class, "database-name").allowMainThreadQueries().fallbackToDestructiveMigration().build();
 
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -165,11 +173,21 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
             //Vérifier si le cache est vide
             //S'il est vide envoyer directement la position actuelle
             //Sinon envoyer toutes les anciennes positions
-            
+
             System.out.println("lat : "+ lat +"\nlng : "+ lon +"\nalt : " + alt);
+            List<PositionGPS> listPositions = db.positionGPSDao().getAll();
+            for (PositionGPS pos: listPositions) {
+                System.out.println(pos.toString());
+                db.positionGPSDao().delete(pos);
+            }
         }else{
 
             Toast.makeText(getApplicationContext(),"Connection FAIL",Toast.LENGTH_LONG).show();
+            PositionGPS positionGPS =  new PositionGPS();
+            positionGPS.setAltitude(alt);
+            positionGPS.setLatitude(lat);
+            positionGPS.setLongitude(lon);
+            db.positionGPSDao().insertAll(positionGPS);
         }
         System.out.println("lat : "+ lat +"\nlng : "+ lon +"\nalt : " + alt);
         /*String url = "http://172.20.10.4:3000";
