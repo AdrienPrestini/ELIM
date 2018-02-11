@@ -13,6 +13,8 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -20,6 +22,7 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 /*import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -55,6 +58,8 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
     public static final String LONG = "longitude";
     public static final String ALT = "altitude";
     private IntentFilter intentFilter;
+
+
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -155,8 +160,19 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
     }
 
     private void sendData(Double lon, Double lat, Double alt) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnectedOrConnecting()){
+            //Vérifier si le cache est vide
+            //S'il est vide envoyer directement la position actuelle
+            //Sinon envoyer toutes les anciennes positions
+            
+            System.out.println("lat : "+ lat +"\nlng : "+ lon +"\nalt : " + alt);
+        }else{
 
-        String url = "http://172.20.10.4:3000";
+            Toast.makeText(getApplicationContext(),"Connection FAIL",Toast.LENGTH_LONG).show();
+        }
+        System.out.println("lat : "+ lat +"\nlng : "+ lon +"\nalt : " + alt);
+        /*String url = "http://172.20.10.4:3000";
         JSONObject rootJSON = new JSONObject();
         try {
             rootJSON.put("longitude", lon);
@@ -169,7 +185,7 @@ public class GPSService extends Service implements GoogleApiClient.ConnectionCal
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
+*/
 
     }
 
