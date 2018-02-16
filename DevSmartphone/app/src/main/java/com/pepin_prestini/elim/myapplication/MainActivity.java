@@ -18,6 +18,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
@@ -34,8 +35,11 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.AlphaAnimation;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
@@ -52,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding viewDataBinding;
     private MaterialSearchView materialSearchView;
     private ListView listView;
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
+
+    FrameLayout progressBarHolder;
 
     private SearchServiceReceiver receiverSearch;
     private GPSServiceReceiver receiverGPS;
@@ -73,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         gpsPreview();
 
         example();
+        progressBarHolder = findViewById(R.id.progressBarHolder);
     }
 
     private void example() {
@@ -143,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.icon_plan)
+                        .setSmallIcon(R.mipmap.logo_app)
                         .setContentTitle("ELIM activé")
                         .setContentText("L'application récupère vos données GPS")
                         .setOngoing(true);
@@ -168,7 +177,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 //Do some magic
-                Toast.makeText(getApplicationContext(), query, Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), query, Toast.LENGTH_LONG).show();
+                new MyTask(query).execute();
                 return false;
             }
 
@@ -192,35 +202,6 @@ public class MainActivity extends AppCompatActivity {
         });
         materialSearchView.setVoiceSearch(true);
 
-        materialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                //Do some magic
-                Intent intent = new Intent(getApplicationContext(), SearchService.class);
-                intent.putExtra("searchWord", query);
-                startService(intent);
-
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                //Do some magic
-                return false;
-            }
-        });
-
-        materialSearchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
-            @Override
-            public void onSearchViewShown() {
-                //Do some magic
-            }
-
-            @Override
-            public void onSearchViewClosed() {
-                //Do some magic
-            }
-        });
     }
 
     @Override
@@ -391,4 +372,37 @@ public class MainActivity extends AppCompatActivity {
             //stopService(new Intent(getApplicationContext(), GPSService.class));
         }
     }
+
+    private class MyTask extends AsyncTask<Void, Void, Void> {
+        String query;
+        public MyTask(String s) {
+            query = s;
+        }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            inAnimation = new AlphaAnimation(0f, 1f);
+            inAnimation.setDuration(200);
+            progressBarHolder.setAnimation(inAnimation);
+            progressBarHolder.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            outAnimation = new AlphaAnimation(1f, 0f);
+            outAnimation.setDuration(200);
+            progressBarHolder.setAnimation(outAnimation);
+            progressBarHolder.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Intent intent = new Intent(getApplicationContext(), SearchService.class);
+            intent.putExtra("searchWord", query);
+            startService(intent);
+            return null;
+        }
+    }
+
 }
