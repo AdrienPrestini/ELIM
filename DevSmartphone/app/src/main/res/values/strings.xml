@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Finder Memory</string>
+    <string name="action_settings">Search</string>
+    <string name="rechercher_un_lieu">Rechercher un lieu</string>
+</resources>
