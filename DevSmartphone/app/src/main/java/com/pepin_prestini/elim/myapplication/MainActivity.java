@@ -1,6 +1,7 @@
 package com.pepin_prestini.elim.myapplication;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -16,6 +17,7 @@ import android.databinding.ViewDataBinding;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
@@ -32,6 +34,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
@@ -40,18 +44,21 @@ import com.pepin_prestini.elim.myapplication.Services.SearchService;
 import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
 import com.pepin_prestini.elim.myapplication.databinding.ActivityMainBinding;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding viewDataBinding;
     private MaterialSearchView materialSearchView;
+    private ListView listView;
+
     private SearchServiceReceiver receiverSearch;
     private GPSServiceReceiver receiverGPS;
     public static final int MY_PERMISSIONS_REQUEST_GPS = 123;
 
-    private Location myCurrentLocation;
     private boolean GPSEnable;
+    private ArrayList<Place> places;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +71,36 @@ public class MainActivity extends AppCompatActivity {
 
         viewSearchCode();
         gpsPreview();
+
+        example();
+    }
+
+    private void example() {
+        places = new ArrayList<Place>() {
+            {
+                add(new Place("Adrien", "87 chemin du moulin", R.drawable.common_ic_googleplayservices));
+                add(new Place("Adrien", "87 chemin du moulin", R.drawable.common_ic_googleplayservices));
+            }
+        };
+
+        PlaceAdapter adapter = new PlaceAdapter(getApplicationContext(),
+                R.layout.row, places);
+
+
+        listView = findViewById(R.id.list_view);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Place place = (Place) parent.getItemAtPosition(position);
+                System.out.println(place);
+                String adress = place.adresse.replace(' ','+');
+                Uri gmmIntentUri = Uri.parse("google.navigation:q="+adress);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
+            }
+        });
     }
 
     private void gpsPreview() {
@@ -322,6 +359,21 @@ public class MainActivity extends AppCompatActivity {
             //Toast.makeText(getApplicationContext(), responseString,Toast.LENGTH_LONG).show();
             stopService(new Intent(getApplicationContext(), SearchService.class));
             //mots = new String[]{"Adrien", "Nicolas"};
+
+
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Estelle", "18 rue acchiardi de saint léger, Nice, france", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin",R.mipmap.gmaps));
+
+
+
         }
     }
 

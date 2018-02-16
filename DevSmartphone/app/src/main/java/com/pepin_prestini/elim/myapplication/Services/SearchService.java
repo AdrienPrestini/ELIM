@@ -103,6 +103,11 @@ public class SearchService extends Service {
                 return;
             }
             System.out.println(search);
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
+            broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+            broadcastIntent.putExtra(RESPONSE_STRING, "hello");
+            sendBroadcast(broadcastIntent);
             StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://172.20.10.3:3000/recherche", new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
