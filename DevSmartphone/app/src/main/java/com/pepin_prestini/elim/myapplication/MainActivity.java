@@ -1,11 +1,10 @@
 package com.pepin_prestini.elim.myapplication;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,42 +12,36 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
-import android.databinding.ViewDataBinding;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.animation.AlphaAnimation;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 import com.pepin_prestini.elim.myapplication.Services.GPSService;
 import com.pepin_prestini.elim.myapplication.Services.SearchService;
-import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
+import com.pepin_prestini.elim.myapplication.Services.SocketServerService;
+import com.pepin_prestini.elim.myapplication.Utils.AppDatabase;
+import com.pepin_prestini.elim.myapplication.Utils.Places.Place;
 import com.pepin_prestini.elim.myapplication.databinding.ActivityMainBinding;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,17 +49,23 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding viewDataBinding;
     private MaterialSearchView materialSearchView;
     private ListView listView;
+    PlaceAdapter adapter;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
 
+    private Button boutonTest;
     FrameLayout progressBarHolder;
 
     private SearchServiceReceiver receiverSearch;
     private GPSServiceReceiver receiverGPS;
+    private SocketServerServiceReceiver receiverSocketServer;
     public static final int MY_PERMISSIONS_REQUEST_GPS = 123;
 
     private boolean GPSEnable;
+    private boolean networkEnable;
     private ArrayList<Place> places;
+    AppDatabase db = Room.databaseBuilder(this,
+            AppDatabase.class, "database-name").allowMainThreadQueries().fallbackToDestructiveMigration().build();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         viewDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         setSupportActionBar(viewDataBinding.toolbar);
 
+        checkActivations();
 
         registerService();
 
@@ -82,19 +82,41 @@ public class MainActivity extends AppCompatActivity {
 
         example();
         progressBarHolder = findViewById(R.id.progressBarHolder);
+        boutonTest = findViewById(R.id.button);
+        boutonTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (Place p: db.placesDao().getAll()) {
+                    db.placesDao().delete(p);
+                }
+                startService(new Intent(getApplicationContext(), SocketServerService.class));
+            }
+        });
+    }
+
+    private void checkActivations() {
+        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (manager != null) {
+            GPSEnable = manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        }
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkEnable = connectivityManager != null && connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     private void example() {
-        places = new ArrayList<Place>() {
+        places = new ArrayList<>(db.placesDao().getAll());
+        /*places = new ArrayList<Place>() {
             {
                 add(new Place("Adrien", "87 chemin du moulin", R.drawable.common_ic_googleplayservices));
                 add(new Place("Adrien", "87 chemin du moulin", R.drawable.common_ic_googleplayservices));
             }
-        };
+        };*/
 
-        PlaceAdapter adapter = new PlaceAdapter(getApplicationContext(),
+        adapter = new PlaceAdapter(getApplicationContext(),
                 R.layout.row, places);
-
+        adapter.notifyDataSetChanged();
+        adapter.setNotifyOnChange(true);
 
         listView = findViewById(R.id.list_view);
         listView.setAdapter(adapter);
@@ -138,11 +160,19 @@ public class MainActivity extends AppCompatActivity {
         filter.addCategory(Intent.CATEGORY_DEFAULT);
         receiverGPS = new GPSServiceReceiver();
         registerReceiver(receiverGPS, filter);
+
+        IntentFilter filterServer = new IntentFilter(SocketServerServiceReceiver.PROCESS_RESPONSE);
+        filterServer.addCategory(Intent.CATEGORY_DEFAULT);
+        receiverSocketServer = new SocketServerServiceReceiver();
+        registerReceiver(receiverSocketServer, filterServer);
+
     }
 
     private void startGPS() {
-        activateGPS();
-        if (GPSEnable) {
+        if(!GPSEnable){
+            activateGPS();
+        }
+        if(GPSEnable) {
             createNotification();
             startService(new Intent(getApplicationContext(), GPSService.class));
         }
@@ -311,6 +341,37 @@ public class MainActivity extends AppCompatActivity {
             alertDialog.show();
         }
 
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnectedOrConnecting()) {
+                if (manager != null) {
+
+                }
+            }else{
+                // Build the alert dialog
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Internet non acitvé");
+                builder.setMessage("Besoin d'internet");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // Show location settings when the user acknowledges the alert dialog
+                        Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+                        startActivity(intent);
+                    }
+                });
+                Dialog alertDialog = builder.create();
+                alertDialog.setCanceledOnTouchOutside(false);
+                alertDialog.show();
+            }
+        }
+
+        if (manager != null && (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || !manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))) {
+
+
+        }
+
+
     }
     @Override
     public void onDestroy()
@@ -318,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(this.receiverSearch);
         unregisterReceiver(this.receiverGPS);
+        unregisterReceiver(this.receiverSocketServer);
         stopService(new Intent(getApplicationContext(), SearchService.class));
         //stopService(new Intent(getApplicationContext(), GPSService.class));
         NotificationManager notifManager= (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -326,7 +388,49 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+    public void createNotificationPush() {
+        // Prepare intent which is triggered if the
+        // notification is selected
+        /*Intent intent = new Intent(this, NotificationReceiverActivity.class);
+        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
 
+        // Build notification
+        // Actions are just fake
+        Notification noti = new Notification.Builder(this)
+                .setContentTitle("Du nouveau dans Memory Finder")
+                .setContentText("nouveaux commerces dans la galerie").setSmallIcon(R.mipmap.logo_app)
+                .setContentIntent(pIntent)
+                .addAction(R.mipmap.logo_app, "Call", pIntent)
+                .addAction(R.mipmap.logo_app, "More", pIntent)
+                .addAction(R.mipmap.logo_app, "And more", pIntent).build();
+        noti.vibrate = new long[] { 1000, 1000, 1000, 1000, 1000 };
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // hide the notification after its selected
+        noti.flags |= Notification.FLAG_AUTO_CANCEL;
+
+        if (notificationManager != null) {
+            notificationManager.notify(0, noti);
+        }
+*/
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.logo_app)
+                        .setContentTitle("Du nouveau dans Memory Finder")
+                        .setContentText("Nouveaux commerces dans la galerie");
+
+        Intent notificationIntent = new Intent(this, this.getClass());
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        builder.setVibrate(new long[] {0,200,100,200,100,200});
+        if (manager != null) {
+            manager.notify(0, builder.build());
+        }
+    }
 
     public class SearchServiceReceiver extends BroadcastReceiver {
 
@@ -339,8 +443,7 @@ public class MainActivity extends AppCompatActivity {
             System.out.println(responseString);
             //Toast.makeText(getApplicationContext(), responseString,Toast.LENGTH_LONG).show();
             stopService(new Intent(getApplicationContext(), SearchService.class));
-            //mots = new String[]{"Adrien", "Nicolas"};
-
+            /*places.clear();
 
             places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
             places.add(new Place("Estelle", "18 rue acchiardi de saint léger, Nice, france", R.mipmap.gmaps));
@@ -351,9 +454,14 @@ public class MainActivity extends AppCompatActivity {
             places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
             places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
             places.add(new Place("Adrien", "87 chemin du moulin", R.mipmap.gmaps));
-            places.add(new Place("Adrien", "87 chemin du moulin",R.mipmap.gmaps));
+            places.add(new Place("Adrien", "87 chemin du moulin",R.mipmap.gmaps));*/
+            adapter.notifyDataSetChanged();
 
-
+            listView.invalidateViews();
+            Place place = new Place("Estelle","18 rue acchiardi de saint léger");
+            db.placesDao().insertAll(place);
+            places.clear();
+            places.addAll(db.placesDao().getAll());
 
         }
     }
@@ -370,6 +478,26 @@ public class MainActivity extends AppCompatActivity {
             Double responseAltitude = intent.getDoubleExtra(GPSService.ALTITUDE_STRING, defaultValue);
             //Toast.makeText(getApplicationContext(), responseLatitude + "/" + responseLongitude + "/" + responseAltitude,Toast.LENGTH_LONG).show();
             //stopService(new Intent(getApplicationContext(), GPSService.class));
+        }
+    }
+
+    public class SocketServerServiceReceiver extends BroadcastReceiver {
+
+        public static final String PROCESS_RESPONSE = "com.pepin_prestini.elim.myapplication.PROCESS_RESPONSE_SOCKET_SERVER";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String responseString = intent.getStringExtra(SocketServerService.RESPONSE_STRING);
+            System.out.println(responseString);
+            //Toast.makeText(getApplicationContext(), responseString,Toast.LENGTH_LONG).show();
+            stopService(new Intent(getApplicationContext(), SocketServerService.class));
+
+            Place place = new Place("Adrien","17 rue dulys");
+            db.placesDao().insertAll(place);
+            places.clear();
+            places.addAll(db.placesDao().getAll());
+            createNotificationPush();
         }
     }
 

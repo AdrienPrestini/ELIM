@@ -1,17 +1,17 @@
 package com.pepin_prestini.elim.myapplication;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.lang.reflect.Array;
+
+import com.pepin_prestini.elim.myapplication.Utils.Places.Place;
+
 import java.util.ArrayList;
 
 /**
@@ -65,7 +65,7 @@ public class PlaceAdapter extends ArrayAdapter<Place> {
         Place place = places.get(position);
         holder.txtTitle.setText(place.nom);
         holder.txtDescription.setText(place.adresse);
-        holder.imgIcon.setImageResource(place.icon);
+        holder.imgIcon.setImageResource(R.mipmap.logo_app);
 
         return row;
     }
