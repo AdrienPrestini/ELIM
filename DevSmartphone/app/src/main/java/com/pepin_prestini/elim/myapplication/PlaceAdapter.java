@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 
 import com.pepin_prestini.elim.myapplication.Utils.Places.Place;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -34,6 +35,7 @@ public class PlaceAdapter extends ArrayAdapter<Place> {
     public PlaceAdapter(Context applicationContext, int row, ArrayList<Place> places) {
         super(applicationContext, row, places);
         this.places = places;
+        context = applicationContext;
     }
 
     @NonNull
@@ -54,7 +56,6 @@ public class PlaceAdapter extends ArrayAdapter<Place> {
             holder.imgIcon = row.findViewById(R.id.listview_image);
             holder.txtTitle = row.findViewById(R.id.listview_item_title);
             holder.txtDescription = row.findViewById(R.id.listview_item_short_description);
-
             row.setTag(holder);
         }
         else
@@ -65,8 +66,9 @@ public class PlaceAdapter extends ArrayAdapter<Place> {
         Place place = places.get(position);
         holder.txtTitle.setText(place.nom);
         holder.txtDescription.setText(place.adresse);
-        holder.imgIcon.setImageResource(R.mipmap.logo_app);
-
+        //holder.imgIcon.setImageResource(R.mipmap.logo_app);
+        Picasso.with(context).load(place.imagePath).into(holder.imgIcon);
+        notifyDataSetChanged();
         return row;
     }
 

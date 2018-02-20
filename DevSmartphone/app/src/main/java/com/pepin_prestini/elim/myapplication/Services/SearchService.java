@@ -2,28 +2,27 @@ package com.pepin_prestini.elim.myapplication.Services;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.IntentService;
 import android.app.Service;
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Bundle;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 import com.pepin_prestini.elim.myapplication.MainActivity;
 
+import java.util.Date;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import com.android.volley.AuthFailureError;
@@ -33,7 +32,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
+import com.pepin_prestini.elim.myapplication.Utils.AppDatabase;
+import com.pepin_prestini.elim.myapplication.Utils.PositionGPS;
 
 
 /**
@@ -41,16 +41,12 @@ import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
  */
 
 public class SearchService extends Service {
-
-    private static final String TAG = "ELIM-GPS";
+    private static final String URL = "192.168.137.98";
+    private static final String TAG = "ELIM-SEARCH";
     public static final String REQUEST_STRING = "myRequest";
     public static final String RESPONSE_STRING = "myResponse";
-    public static final String RESPONSE_MESSAGE = "myResponseMessage";
-    LocationManager mLocationManager;
-    private String URL = null;
-    private static final int REGISTRATION_TIMEOUT = 3 * 1000;
-    private static final int WAIT_TIMEOUT = 30 * 1000;
-
+    AppDatabase db = Room.databaseBuilder(this,
+            AppDatabase.class, "database-name").allowMainThreadQueries().fallbackToDestructiveMigration().build();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -68,8 +64,6 @@ public class SearchService extends Service {
 
     @SuppressLint("MissingPermission")
     private void sendToServer(final String search) {
-        //I make a log to see the results
-
         // Get LocationManager object
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -77,7 +71,7 @@ public class SearchService extends Service {
         Criteria criteria = new Criteria();
 
         // Get the name of the best provider
-        String provider = null;
+        String provider;
         if (locationManager != null) {
             provider = locationManager.getBestProvider(criteria, true);
             // Get Current Location
@@ -102,52 +96,110 @@ public class SearchService extends Service {
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            System.out.println(search);
-            Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
-            broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-            broadcastIntent.putExtra(RESPONSE_STRING, "hello");
-            sendBroadcast(broadcastIntent);
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://172.20.10.3:3000/recherche", new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    //System.out.println(response);
-                    Intent broadcastIntent = new Intent();
-                    broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
-                    broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-                    broadcastIntent.putExtra(RESPONSE_STRING, response);
-                    sendBroadcast(broadcastIntent);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    System.out.println(error);
-                }
-            })
-            {
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> map = new Hashtable<>();
-                    map.put("imei", "123456789" );
-                    map.put("latitude", myLatitude+"" );
-                    map.put("longitude", myLongitude +"");
-                    map.put("mot", search);
-                    return map;
-                }
-            };
-
-            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            queue.add(stringRequest);
-
-
+            if(isOnline()){
+                sendOldData();
+                sendDataToServer(myLatitude,myLongitude, search);
+            }else{
+                storeDataInLocal(myLatitude,myLongitude, search, "123456789");
+            }
 
         }
+    }
 
+    private void sendOldData() {
+        List<PositionGPS> positionGPSList = db.positionGPSDao().getAll();
+        for (PositionGPS p: positionGPSList) {
+            sendOldDataToServer(p);
+        }
+    }
 
+    private void sendOldDataToServer(final PositionGPS p) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/rechercheAncienne", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                System.out.println(response);
 
+                broadcastResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Erreur",error.toString());
+            }
+        })
+        {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> map = new Hashtable<>();
+                System.out.println(p);
+                map.put("imei", "123456789" );
+                map.put("latitude", p.getLatitude()+"" );
+                map.put("longitude", p.getLongitude() +"");
+                map.put("search", p.getMot());
+                map.put("date", p.getDateSearch());
+                map.put("temps", p.getTimeSearch() + "");
+                return map;
+            }
+        };
 
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        queue.add(stringRequest);
+    }
 
+    private void sendDataToServer(final Double  latitude, final Double longitude, final String motSearch) {
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
+        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        broadcastIntent.putExtra(RESPONSE_STRING, "TEST");
+        sendBroadcast(broadcastIntent);
+        return;
+        /*StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/recherche", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                System.out.println(response);
 
+                broadcastResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Erreur",error.toString());
+            }
+        })
+        {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> map = new Hashtable<>();
+                map.put("imei", "123456789" );
+                map.put("latitude", latitude+"" );
+                map.put("longitude", longitude +"");
+                map.put("search", motSearch);
+                return map;
+            }
+        };
 
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        queue.add(stringRequest);*/
+    }
+
+    private void storeDataInLocal(Double lat, Double lng, String mot, String imei) {
+        PositionGPS pos = new PositionGPS(lat, lng, mot,imei, new Date());
+        this.db.positionGPSDao().insertAll(pos);
+        this.db.setTransactionSuccessful();
+    }
+
+    private boolean isOnline() {
+            ConnectivityManager cm =
+                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo netInfo = cm != null ? cm.getActiveNetworkInfo() : null;
+            return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+    private void broadcastResponse(String response) {
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
+        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        broadcastIntent.putExtra(RESPONSE_STRING, response);
+        sendBroadcast(broadcastIntent);
     }
 }

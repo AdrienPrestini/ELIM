@@ -20,7 +20,7 @@
         android:theme="@style/AppTheme">
         <service android:name=".Services.SearchService" />
         <service android:name=".Services.GPSService" />
-        <service android:name=".Services.SocketServerService" />
+
         <activity
             android:name=".SplashActivity"
             android:label="@string/app_name"

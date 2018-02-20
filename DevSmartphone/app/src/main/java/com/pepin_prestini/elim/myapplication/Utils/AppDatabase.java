@@ -9,7 +9,7 @@ import com.pepin_prestini.elim.myapplication.Utils.Places.PlacesDao;
 /**
  * Created by Adrien on 11/02/2018.
  */
-@Database(entities = {PositionGPS.class, Place.class}, version = 3)
+@Database(entities = {PositionGPS.class, Place.class}, version = 5)
 public abstract class AppDatabase extends RoomDatabase{
     public abstract PositionGPSDao positionGPSDao();
     public abstract PlacesDao placesDao();
