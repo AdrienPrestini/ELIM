@@ -51,4 +51,6 @@ dependencies {
 
     //picasso
     compile 'com.squareup.picasso:picasso:2.5.2'
+    //showcase
+    implementation 'uk.co.samuelwall:material-tap-target-prompt:2.7.0'
 }

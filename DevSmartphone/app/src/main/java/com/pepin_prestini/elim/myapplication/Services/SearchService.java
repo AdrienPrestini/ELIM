@@ -41,7 +41,7 @@ import com.pepin_prestini.elim.myapplication.Utils.PositionGPS;
  */
 
 public class SearchService extends Service {
-    private static final String URL = "192.168.137.98";
+    private static final String URL = "172.20.10.2";
     private static final String TAG = "ELIM-SEARCH";
     public static final String REQUEST_STRING = "myRequest";
     public static final String RESPONSE_STRING = "myResponse";
@@ -77,15 +77,13 @@ public class SearchService extends Service {
             // Get Current Location
 
 
-            @SuppressLint("MissingPermission") Location myLocation = locationManager.getLastKnownLocation(provider);
+            Location myLocation = locationManager.getLastKnownLocation(provider);
             //latitude of location
             final double myLatitude = myLocation.getLatitude();
 
             //longitude og location
             final double myLongitude = myLocation.getLongitude();
 
-
-            Toast.makeText(getApplicationContext(),"lat : " +  myLatitude +" lng : " + myLongitude, Toast.LENGTH_LONG ).show();
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -114,6 +112,7 @@ public class SearchService extends Service {
     }
 
     private void sendOldDataToServer(final PositionGPS p) {
+        System.out.println(p);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/rechercheAncienne", new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -147,13 +146,7 @@ public class SearchService extends Service {
     }
 
     private void sendDataToServer(final Double  latitude, final Double longitude, final String motSearch) {
-        Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(MainActivity.SearchServiceReceiver.PROCESS_RESPONSE);
-        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-        broadcastIntent.putExtra(RESPONSE_STRING, "TEST");
-        sendBroadcast(broadcastIntent);
-        return;
-        /*StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/recherche", new Response.Listener<String>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/recherche", new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 System.out.println(response);
@@ -174,12 +167,13 @@ public class SearchService extends Service {
                 map.put("latitude", latitude+"" );
                 map.put("longitude", longitude +"");
                 map.put("search", motSearch);
+                System.out.println(map);
                 return map;
             }
         };
 
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        queue.add(stringRequest);*/
+        queue.add(stringRequest);
     }
 
     private void storeDataInLocal(Double lat, Double lng, String mot, String imei) {

@@ -11,8 +11,18 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.pepin_prestini.elim.myapplication.MainActivity;
 import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
+
+import java.util.Hashtable;
+import java.util.Map;
 
 /**
  * Created by Adrien on 16/02/2018.
@@ -21,14 +31,14 @@ import com.pepin_prestini.elim.myapplication.Utils.HelperLocationStrategies;
 public class GPSService extends Service {
     private static final String TAG = "ELIM-GPS";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 1000;
+    private static final int LOCATION_INTERVAL = 1000*40;//10 minutes
     private static final float LOCATION_DISTANCE = 10f;
 
     public static final String LATITUDE_STRING = "latitude";
     public static final String LONGITUDE_STRING = "longitude";
     public static final String ALTITUDE_STRING = "altitude";
     public static final String RESPONSE_STRING = "myResponse";
-
+    public static final String URL = "172.20.10.2";
 
     LocationListener[] mLocationListeners = new LocationListener[] {
             new LocationListener(LocationManager.GPS_PROVIDER)};
@@ -48,12 +58,12 @@ public class GPSService extends Service {
             if(HelperLocationStrategies.isBetterLocation(location, mLastLocation))
                 mLastLocation.set(location);
 
-            /*StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://192.168.137.98:3000/routine", new Response.Listener<String>() {
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://"+URL+":3000/routine", new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
                     System.out.println(response);
 
-                    //broadcastResponse(response);
+                    broadcastResponse(response);
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -73,16 +83,9 @@ public class GPSService extends Service {
             };
 
             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            queue.add(stringRequest);*/
-            broadcastResponse("");
+            queue.add(stringRequest);
+            //broadcastResponse("");
 
-            /*Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction(SearchService.REQUEST_STRING);
-            broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-            broadcastIntent.putExtra(LATITUDE_STRING, mLastLocation.getLatitude());
-            broadcastIntent.putExtra(LONGITUDE_STRING, mLastLocation.getLongitude());
-            broadcastIntent.putExtra(ALTITUDE_STRING, mLastLocation.getAltitude());
-            sendBroadcast(broadcastIntent);*/
         }
         @Override
         public void onProviderDisabled(String provider)
