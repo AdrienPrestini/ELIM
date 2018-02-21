@@ -1,20 +1,16 @@
-#Projet ELIM 2017-2018
-========================
+# Projet ELIM 2017-2018
 
-##Encadrant : 
-------------
+## Encadrant : 
 
-	* Jean-Yves TIGLI : Jean-Yves.TIGLI@unice.fr
+Jean-Yves TIGLI : Jean-Yves.TIGLI@unice.fr
 
-##Étudiants : 
--------------
+## Étudiants : 
 
-	* Nicolas PÉPIN : nicolas.pepin.06@gmail.com
-	* Adrien PRESTINI : adrien.prestini@etu.unice.fr
+* Nicolas PÉPIN : nicolas.pepin.06@gmail.com
+* Adrien PRESTINI : adrien.prestini@etu.unice.fr
 	
 	
-##Présentation du projet
-------------------------
+## Présentation du projet
 
 Ce projet permet de mettre en avant la programmation avancée en développement mobile.
 Notre projet est de développer une application qui permet la détection de magasins sur notre trajet à proximité de notre position, et nous affiche les magasins qui nous interesse.
