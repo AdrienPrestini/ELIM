@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">ELIM</string>
-    <string name="action_settings">Préférences</string>
-    <string name="title_activity_splashscreen">SplashscreenActivity</string>
-
-    <string name="notification">Notification www.tutos-android.com</string>
-    <string name="notification_title">Ma premiere notification www.tutos-android.com</string>
-    <string name="notification_desc">Cliquez sur moi je suis une notification</string>
-</resources>
