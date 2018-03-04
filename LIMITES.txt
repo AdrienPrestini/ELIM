@@ -8,3 +8,4 @@ n'est pas possible (dans la mesure où il ne faut pas tout redévelopper) d'avoi
 à moins d'avoir l'applciation déjà lancée et la position activée.
 - Il faut que l'application Google maps soit installé sur le smartphone pour pouvoir consulter le trajet entre
 la position de l'utilisateur et le commerce souhaité.
+- La version du sdk de compilation est en version 26 le minSDk est la version 19 et le target en version 26 (cf. app.gradle)
