@@ -1,0 +1,10 @@
+Ce document présentes les points faibles et les limites de l'application et la partie serveur : 
+- L'application Android est une application qui possède beaucoup de dépendances, ce qui peut provoquer des 
+incompatibilités si l'une d'eux est obsolète.
+- L'application se base sur la position GPS de l'utilisateur, elle "traque" l'utilisateur ce qui suppose des 
+questions d'éthiques sur la vie privée et par conséquent de la sécurité.
+- L'outils permettant l'accès au GPS sur android se base sur un écouteur à interval de temps régulier et il 
+n'est pas possible (dans la mesure où il ne faut pas tout redévelopper) d'avoir la position GPS à un instant t 
+à moins d'avoir l'applciation déjà lancée et la position activée.
+- Il faut que l'application Google maps soit installé sur le smartphone pour pouvoir consulter le trajet entre
+la position de l'utilisateur et le commerce souhaité.
