@@ -4,13 +4,9 @@ const bodyParser = require('body-parser');
 var GooglePlaces = require('google-places');
 var cron = require('node-cron');
 var BayesClassifier = require('bayes-classifier')
-
 const app = express()
-const port = 3000
-
+const port = 8080
 const valMinNotifSemaine = 5;
-
-
 
 /**
  * Apprentissage avec le classifier
@@ -46,24 +42,6 @@ classifier.addDocuments(coiffeurWords, `coiffeur`)
 classifier.addDocuments(boulangerieWords, `boulangerie`)
  
 classifier.train()
-
-
-//console.log(classifier.getClassifications("manger fast food"))
-//console.log(classifier.getClassifications("bigmac burger"))
-//console.log(classifier.getClassifications("pizza marguerite")) 
-//console.log(classifier.getClassifications("casino"))
-//console.log(classifier.getClassifications("auchan drive"))
-//console.log(classifier.classify("auchan drive"))
-
-//console.log("\n\n\n" + classifier.docs[36]["value"])
-
-//supermarcheWords.push("auchan drive");
-//classifier.addDocuments(supermarcheWords, `supermarche`)
-//classifier.train()
-
-//console.log(classifier.getClassifications("drive"))
-
-
 
 /*
 	Date.getday():
@@ -169,10 +147,6 @@ app.post('/routine', function (request, response) {
 		heureFin = d.getHours() + ':30:00';
 	}
 
-
-	//Ajouter dans le where l'imei si on met plusieurs téléphone
-	//SELECT motCherche, COUNT(motCherche) as nombreDeFois FROM recherche WHERE jourSemaine = 3 AND heureRecherche BETWEEN '23:30:00' AND '0:30:00'
-	//SELECT motCherche, COUNT(motCherche) as nombreDeFois FROM recherche WHERE jourSemaine = 3 AND heureRecherche BETWEEN '8:30:00' AND '9:30:00' GROUP BY motCherche ORDER BY nombreDeFois desc limit 1
 	var sql = "SELECT motCherche, COUNT(motCherche) as nombreDeFois FROM recherche WHERE jourSemaine = " + d.getDay() + " AND heureRecherche BETWEEN '" +  heureDebut + "' AND '" + heureFin + "' GROUP BY motCherche ORDER BY nombreDeFois desc limit 1";
 	connection.query(sql, function (err, result) {
 		if (err) throw err;
@@ -243,6 +217,10 @@ app.listen(port, (err) => {
 	if (err) {
 	return console.log('something bad happened', err)
 }
+
+app.get('/', function (req, res) {
+  res.send('Hello World!')
+})
 
 console.log(`server is listening on ${port}`)
 })
