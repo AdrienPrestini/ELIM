@@ -37,9 +37,10 @@ Pour lancer le serveur il suffit de lancer le index.js avec:
 node index.js
 
 On peut le lancer aussi avec docker, pour cela il faut que docker soit installé sur votre serveur ou machine puis, que mysql de docker contienne la data base et 
-la table "recherche", voir le fichier elim.sql qui est un exemple de la db. Il va falloir lier les deux containers (mySql et elim)
-https://hub.docker.com/r/mysql/mysql-server/
-https://buddy.works/guides/how-dockerize-node-application
+la table "recherche", voir le fichier elim.sql qui est un exemple de la db. Il va falloir lier les deux containers (mySql et elim).
+Aide:
+- https://hub.docker.com/r/mysql/mysql-server/
+- https://buddy.works/guides/how-dockerize-node-application
 
 Pour lancer, effectuer:
 
